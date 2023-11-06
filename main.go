@@ -1,49 +1,36 @@
 package main
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/jmoiron/sqlx"
 
 	_ "github.com/lib/pq"
 )
 
 type UserRepo struct {
-	UserId    int    `json:"user_id"`
-	UserName  string `json:"user_name"`
-	UserEmail string `json:"user_email"`
+	UserId    int    `json:"user_id" db:"user_id"`
+	UserName  string `json:"user_name" db:"user_name"`
+	UserEmail string `json:"user_email" db:"user_email"`
 }
 
 type UserHandler struct {
-	db *sql.DB
+	db *sqlx.DB
 }
 
-func NewUserHandler(repo *sql.DB) *UserHandler {
+func NewUserHandler(repo *sqlx.DB) *UserHandler {
 	return &UserHandler{repo}
 }
 
 func (u *UserHandler) GetListUserHandler(w http.ResponseWriter, r *http.Request) {
-	rows, err := u.db.Query("SELECT user_id, user_name, user_email FROM \"User\"")
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	var users []UserRepo
-	for rows.Next() {
-		var c UserRepo
-		err = rows.Scan(&c.UserId, &c.UserName, &c.UserEmail)
-		if err != nil {
-			log.Fatal(err)
-		}
-		users = append(users, c)
-	}
 
-	if err := rows.Err(); err != nil {
+	query := "SELECT user_id, user_name, user_email FROM \"User\""
+	if err := u.db.Select(&users, query); err != nil {
 		log.Fatal(err)
 	}
 
@@ -58,12 +45,6 @@ func (u *UserHandler) GetListUserHandler(w http.ResponseWriter, r *http.Request)
 }
 
 func (u *UserHandler) CreateUserHandler(w http.ResponseWriter, r *http.Request) {
-	// insertQuery := `
-	// 		INSERT INTO "User" (user_name, user_email)
-	// 		VALUES ($1, $2)
-	// 		RETURNING user_id
-	// 		`
-
 	vars := mux.Vars(r)
 
 	fmt.Printf("vars ==> %v", vars)
@@ -94,7 +75,7 @@ func main() {
 		host, port, user, password, dbname)
 
 	// Setup and connect database
-	db, err := sql.Open("postgres", psqlconn)
+	db, err := sqlx.Open("postgres", psqlconn)
 
 	if err != nil {
 		log.Fatal(err)
