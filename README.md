@@ -15,3 +15,10 @@ docker run --name postgres16 -e POSTGRES_USER=hieund -e POSTGRES_PASSWORD=It1234
 * có cơ chế triển khai migration database hiệu quả
 * triển khai hệ thống routing hợp lý
 * triển khai các middleware cho hệ thống
+
+
+
+* tách nó ra thành các tầng 
+
+
+Controller (Routing, tầng này có nhiệm vụ xử lý với request, response) -> Service (Kết nối đến database và giao tiếp với db)
