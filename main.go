@@ -1,14 +1,12 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"gogofi/internal/database/services"
 	"log"
-	"net/http"
 
-	"github.com/gorilla/mux"
-	"github.com/jmoiron/sqlx"
-
-	"gogofi/internal/connect"
+	"github.com/jackc/pgx/v5"
 
 	_ "github.com/lib/pq"
 )
@@ -16,7 +14,7 @@ import (
 const (
 	host     = "localhost"
 	port     = 5432
-	user     = "hieund"
+	user     = "postgres"
 	password = "It123456@"
 	dbname   = "gogofi"
 )
@@ -25,26 +23,35 @@ func main() {
 	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		host, port, user, password, dbname)
 
-	// Setup and connect database
-	db, err := sqlx.Open("postgres", psqlconn)
-	defer db.Close()
+	conn, err := pgx.Connect(context.Background(), psqlconn)
 
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer conn.Close(context.Background())
 	fmt.Println("connect database success")
 
-	var userHandler = connect.InitializeApp(db)
+	queries := services.New(conn)
 
-	r := mux.NewRouter()
+	users, err := queries.GetListUsers(context.Background())
 
-	// Routing for user (CRUD)
-	r.HandleFunc("/api/users", userHandler.GetListUserHandler).Methods("GET")
-	r.HandleFunc("/api/users", userHandler.CreateUserHandler).Methods("POST")
-	r.HandleFunc("/api/users/{id}", userHandler.UpdateUserHandler).Methods("PUT")
-	r.HandleFunc("/api/users/{id}", userHandler.DeleteUserHandler).Methods("DELETE")
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	fmt.Println("Running service!!")
+	fmt.Printf("Values of users ==> %v", users)
 
-	http.ListenAndServe("localhost:3000", r)
+	// var userHandler = connect.InitializeApp(db)
+
+	// r := mux.NewRouter()
+
+	// // Routing for user (CRUD)
+	// r.HandleFunc("/api/users", userHandler.GetListUserHandler).Methods("GET")
+	// r.HandleFunc("/api/users", userHandler.CreateUserHandler).Methods("POST")
+	// r.HandleFunc("/api/users/{id}", userHandler.UpdateUserHandler).Methods("PUT")
+	// r.HandleFunc("/api/users/{id}", userHandler.DeleteUserHandler).Methods("DELETE")
+
+	// fmt.Println("Running service!!")
+
+	// http.ListenAndServe("localhost:3000", r)
 }
