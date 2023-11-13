@@ -7,15 +7,14 @@
 package connect
 
 import (
-	"github.com/jmoiron/sqlx"
-	"gogofi/internal/handler"
-	"gogofi/internal/repo"
+	"gogofi/internal/controller"
+	"gogofi/internal/database/services"
 )
 
 // Injectors from wire.go:
 
-func InitializeApp(db *sqlx.DB) *handler.UserHandler {
-	repoRepo := repo.NewRepo(db)
-	userHandler := handler.NewUserHandler(repoRepo)
-	return userHandler
+func InitializeApp(db services.DBTX) *controller.UserController {
+	queries := services.New(db)
+	userController := controller.NewUserController(queries)
+	return userController
 }

@@ -22,3 +22,7 @@ docker run --name postgres16 -e POSTGRES_USER=hieund -e POSTGRES_PASSWORD=It1234
 
 
 Controller (Routing, tầng này có nhiệm vụ xử lý với request, response) -> Service (Kết nối đến database và giao tiếp với db)
+
+
+
+// +build wireinject

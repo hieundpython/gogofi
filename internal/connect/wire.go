@@ -5,13 +5,12 @@ package connect
 
 import (
 	"github.com/google/wire"
-	"github.com/jmoiron/sqlx"
 
-	"gogofi/internal/handler"
-	"gogofi/internal/repo"
+	"gogofi/internal/controller"
+	"gogofi/internal/database/services"
 )
 
-func InitializeApp(db *sqlx.DB) *handler.UserHandler {
-	wire.Build(handler.NewUserHandler, repo.NewRepo)
-	return &handler.UserHandler{}
+func InitializeApp(db services.DBTX) *controller.UserController {
+	wire.Build(controller.NewUserController, services.New)
+	return &controller.UserController{}
 }

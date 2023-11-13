@@ -3,9 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
+	"gogofi/internal/controller"
 	"gogofi/internal/database/services"
 	"log"
+	"net/http"
 
+	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5"
 
 	_ "github.com/lib/pq"
@@ -33,25 +36,18 @@ func main() {
 
 	queries := services.New(conn)
 
-	users, err := queries.GetListUsers(context.Background())
+	uc := controller.NewUserController(queries)
 
-	if err != nil {
-		log.Fatal(err)
-	}
+	r := mux.NewRouter()
 
-	fmt.Printf("Values of users ==> %v", users)
+	// Routing for user (CRUD)
+	r.HandleFunc("/api/users", uc.GetListUserHandler).Methods("GET")
+	r.HandleFunc("/api/users/{id}", uc.GetUserId).Methods("GET")
+	r.HandleFunc("/api/users", uc.CreateUserHandler).Methods("POST")
+	r.HandleFunc("/api/users/{id}", uc.UpdateUserHandler).Methods("PUT")
+	r.HandleFunc("/api/users/{id}", uc.DeleteUserHandler).Methods("DELETE")
 
-	// var userHandler = connect.InitializeApp(db)
+	fmt.Println("Running service!!")
 
-	// r := mux.NewRouter()
-
-	// // Routing for user (CRUD)
-	// r.HandleFunc("/api/users", userHandler.GetListUserHandler).Methods("GET")
-	// r.HandleFunc("/api/users", userHandler.CreateUserHandler).Methods("POST")
-	// r.HandleFunc("/api/users/{id}", userHandler.UpdateUserHandler).Methods("PUT")
-	// r.HandleFunc("/api/users/{id}", userHandler.DeleteUserHandler).Methods("DELETE")
-
-	// fmt.Println("Running service!!")
-
-	// http.ListenAndServe("localhost:3000", r)
+	http.ListenAndServe("localhost:3000", r)
 }
